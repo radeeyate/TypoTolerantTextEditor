@@ -20,7 +20,7 @@ func newEntry1() *entry1 {
 	e := &entry1{}
 	e.ExtendBaseWidget(e)
 	e.Entry.MultiLine = true
-	e.Entry.Wrapping = fyne.TextWrapWord
+	e.Entry.Wrapping = fyne.TextWrapOff
 	return e
 }
 
@@ -37,7 +37,13 @@ func printCursorPosition(e *entry1) {
 	cursor := e.Entry.CursorColumn
 	row := e.Entry.CursorRow
 	text := e.Entry.Text
-	lineText := strings.Split(text, "\n")[row]
+	fmt.Println(row)
+	lines := strings.Split(text, "\n")
+	if len(lines) <= row {
+		fmt.Println("error: out of bounds ")
+		return
+	}
+	lineText := lines[row]
 	part1, part2 := lineText[:cursor], lineText[cursor:]
 	fmt.Println("part 1: " + part1)
 	fmt.Println("part 2: " + part2)
