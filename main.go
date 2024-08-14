@@ -10,9 +10,13 @@ import (
 	"strings"
 )
 
+var w fyne.Window
+
 type entry1 struct {
 	widget.Entry
 }
+
+var saved bool
 
 func newEntry1() *entry1 {
 	e := &entry1{}
@@ -25,12 +29,17 @@ func newEntry1() *entry1 {
 func (e *entry1) TypedKey(ke *fyne.KeyEvent) {
 	e.Entry.TypedKey(ke)
 
+	if !strings.HasPrefix(w.Title(), "*") {
+		w.SetTitle("*Typo Tolerant Text Editor")
+		saved = false
+	}
+
 	if ke.Name == fyne.KeySpace {
 		printCursorPosition(e)
 	}
 }
 
-func printCursorPosition(e *entry1) {
+func printCursorPosition(e *entry1) { // best code every
 	cursor := e.Entry.CursorColumn
 	row := e.Entry.CursorRow
 	text := e.Entry.Text
@@ -97,7 +106,9 @@ func typoWord(word string) string {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Typo Tolerant Text Editor")
+	w = a.NewWindow("Typo Tolerant Text Editor")
+
+	saved = true
 
 	editor1 := newEntry1()
 	editor1.SetPlaceHolder("Start typing here...")

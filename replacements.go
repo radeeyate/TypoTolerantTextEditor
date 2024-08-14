@@ -53,268 +53,222 @@ var keyboardMap = map[string][]string{ // this was a pain to make
 
 var wordReplacements = map[string][]string{
 	// A for AUGH
-	"absence":      {"absense"},
-	"acceptable":   {"acceptible", "exceptable"},
-	"achieve":      {"acheive"},
-	"across":       {"accross", "acrost"},
-	"address":      {"adress", "addres"},
-	"affect":       {"effect"},
-	"aggressive":   {"agressive", "agresive"},
-	"agree":        {"aggree", "agre"},
-	"amateur":      {"amatuer", "amature"},
-	"among":        {"amoung", "amung"},
-	"apparent":     {"aparent", "apparant"},
-	"appearance":   {"appearence", "appearrance"},
-	"argument":     {"arguement"}, // i aint arguing about this one
-	"arctic":       {"artic"},     // brr. it's cold here
-	"assist":       {"asist", "assit"},
-	"asthma":       {"asma", "asthama"},
-	"athlete":      {"athelete", "athleat"},
-	"attendance":   {"attendence", "attendense"},
-	"audience":     {"audince", "audiance"},
+	"absence":    {"absense"},
+	"acceptable": {"acceptible", "exceptable"},
+	"achieve":    {"acheive"},
+	"across":     {"acrost"},
+	"address":    {"addres"},
+	"affect":     {"effect"},
+	"amateur":    {"amatuer", "amature"},
+	"among":      {"amung"},
+	"apparent":   {"apparant"},
+	"appearance": {"appearence"},
+	"assist":     {"assit"},
+	"asthma":     {"asthama"},
+	"athlete":    {"athleat"},
+	"attendance": {"attendence", "attendense"},
+	"audience":   {"audiance"},
 
 	// B for brain tired
-	"balance":   {"ballance", "balence"},
-	"basically": {"basicly", "bassically"},
+	"balance":   {"balence"},
+	"basically": {"bassically"},
 	"because":   {"becuase", "beacuse"},
-	"before":    {"befor", "bfore"},
-	"beginning": {"begining", "beggining"},
-	"believe":   {"beleive", "belive"}, // believe it or not, im still going
-	"benefit":   {"benifit", "beniffit"},
-	"between":   {"betwen", "beetween"},
+	"before":    {"bfore"},
+	"beginning": {"beggining"},
+	"believe":   {"beleive"}, // believe it or not, im still going
+	"benefit":   {"benifit"},
+	"between":   {"beetween"},
 	"bicycle":   {"bycicle", "bycycle"},
-	"biscuit":   {"biscut", "biskit"},
-	"business":  {"buisness", "bussiness"},
+	"biscuit":   {"biskit"},
+	"business":  {"buisness"},
 
 	// C for can't spell. send help
 	"calendar":    {"calender", "calander"},
-	"campaign":    {"campain"},
-	"can't":       {"cant"},
 	"caribbean":   {"carribean"}, // i wish i were here instead
-	"category":    {"catagory", "catagorie"},
+	"category":    {"catagory"},
 	"cemetery":    {"cemetary", "cematery"}, // spooky spelling
-	"challenge":   {"chalange"},
-	"change":      {"chang"},
-	"choose":      {"chose"}, // i chose to do this. i regret it now.
-	"clothes":     {"cloths", "close"},
-	"coming":      {"comming", "comeing"},
-	"commit":      {"comitt", "comit"},
-	"committee":   {"comittee", "commitee"},
-	"completely":  {"completly", "completley"},
-	"conscious":   {"concious", "conscous"},
-	"convenience": {"conveniance", "convenince"},
-	"coolly":      {"cooly"},
+	"clothes":     {"close"},
+	"coming":      {"comeing"},
+	"commit":      {"comitt"},
+	"committee":   {"commitee"},
+	"completely":  {"completley"},
+	"conscious":   {"conscous"},
+	"convenience": {"conveniance"},
 	"could've":    {"could of"}, // could've used a break before starting this
-	"country":     {"counrty", "countrey"},
-	"course":      {"corse"},
+	"country":     {"counrty"},
 
 	// D for despair, this will never end
-	"definitely": {"definately", "definitly"},
+	"definitely": {"definately"},
 	"dependent":  {"dependant", "depentant"},
-	"describe":   {"discribe", "decribe"},
-	"desperate":  {"desparate", "desperat"},
-	"develop":    {"develope", "devlope"},
-	"difference": {"differance", "differrence"},
-	"difficult":  {"dificult", "difficault"},
-	"disappoint": {"disapoint", "dissapoint"},
-	"discipline": {"disipline", "disiplin"},
-	"during":     {"durring"},
+	"describe":   {"discribe"},
+	"desperate":  {"desparate"},
+	"develop":    {"devlope"},
+	"difference": {"differance"},
+	"difficult":  {"difficault"},
+	"disappoint": {"dissapoint"},
+	"discipline": {"disiplin"},
 
-	// E easy because this section isn't too long - thankgoodness!
+	// E easy because this section isn't too long - thank goodness!
 	"easy":        {"eazy"},
 	"effect":      {"affect"},
-	"eighth":      {"eigth"},
-	"embarrass":   {"embarass", "embarras"},
-	"environment": {"enviroment", "envirnment"},
-	"equipment":   {"equipmnet", "equiptment"},
+	"embarrass":   {"embarras"},
+	"environment": {"envirnment"},
+	"equipment":   {"equipmnet"},
 	"especially":  {"expecially"},
-	"exaggerate":  {"exagerate", "exagerrate"}, // not exaggerating, this is hard
-	"excellent":   {"excelent", "excellant"},
+	"exaggerate":  {"exagerrate"}, // not exaggerating, this is hard
+	"excellent":   {"excellant"},
 	"except":      {"expect"},
-	"exercise":    {"exersize", "excercise"},
+	"exercise":    {"exersize"},
 	"existence":   {"existance", "existense"},
-	"experience":  {"experiance", "experince"},
+	"experience":  {"experiance"},
 	"experiment":  {"expirement", "experament"},
 
 	// F for finally halfway???
-	"familiar":    {"familar", "familliar"},
-	"fascinating": {"fascinateing", "facinating"},
-	"february":    {"febuary", "feburary"},
-	"finally":     {"finaly", "finnaly"},
-	"foreign":     {"foriegn", "forreign"},
-	"forgetting":  {"forgeting"}, // i am forgoring how to spell words
+	"familiar":    {"familliar"},
+	"fascinating": {"facinating"},
+	"february":    {"feburary"},
+	"finally":     {"finnaly"},
+	"foreign":     {"foriegn"},
 	"forward":     {"forword"},
-	"friend":      {"freind", "frend"}, // if only had a friend to help me w/ this
+	"friend":      {"freind"}, // if only had a friend to help me w/ this
 	"fundamental": {"fundemental", "fundamantal"},
 	"further":     {"farther"}, // further down the rabbit hole we go
 
 	// G for gosh this is a long list
-	"generally":  {"generaly", "generelly"},
-	"government": {"goverment", "governmnet"},
-	"grammar":    {"grammer"},  // my grammer is suffering
-	"guarantee":  {"guaranty"}, // i guarantee there are more mistakes
+	"generally":  {"generelly"},
+	"government": {"governmnet"},
+	"grammar":    {"grammer"}, // my grammer is suffering
 	"guidance":   {"guidence", "guidense"},
 
 	// H for help me!!!
-	"happened":  {"hapened", "happend"},
-	"harass":    {"harrass", "haras"}, // dont harass me about the mistakes...
-	"have":      {"hav"},
-	"having":    {"haveing"},
-	"height":    {"hight", "heighth"},
-	"heroes":    {"heros"},
-	"hopefully": {"hopfully", "hopefuly"},  // hopefully this is iver soon
-	"humorous":  {"humourous", "humerous"}, // this is not as humorous as i thought it would be
+	"happened":  {"happend"},
+	"harass":    {"haras"}, // dont harass me about the mistakes...
+	"height":    {"heighth"},
+	"hopefully": {"hopefuly"}, // hopefully this is iver soon
+	"humorous":  {"humerous"}, // this is not as humorous as i thought it would be
 
 	// I for i cant believe im still doing this
-	"immediately":   {"imediately", "immediatly"},
+	"immediately":   {"immediatly"},
 	"important":     {"importent"}, // it is generally important to spell correctly
-	"incidentally":  {"incidently", "incidentallly"},
+	"incidentally":  {"incidentallly"},
 	"independent":   {"independant"},
 	"indispensable": {"indispensible"},
 	"influence":     {"influance", "influense"}, // i hope i don't influence anyone to do this
-	"intelligence":  {"inteligence"},
-	"interesting":   {"intresting", "intersting"}, // it has been interesting making this list
-	"interrupt":     {"interupt", "interript"},
-	"island":        {"iland", "isalnd"},
-	"its":           {"it's"}, // 🤓🤓🤓🤓
+	"interesting":   {"intersting"}, // it has been interesting making this list
+	"interrupt":     {"interript"},
+	"island":        {"isalnd"},
 
 	// J for just keep swimming.. swimming.. swimming...
-	"jealous":    {"jelous", "jelouse"}, // am jealous of people with perfect spelling
-	"judgment":   {"judgement"},         // reserve it...
-	"knowledge":  {"knowlege", "knoweledge"},
-	"laboratory": {"labratory", "laboritory"},
+	"jealous":    {"jelouse"}, // am jealous of people with perfect spelling
+	"knowledge":  {"knoweledge"},
+	"laboratory": {"laboritory"},
 
 	// L for length of this list
 	"leisure":   {"liesure", "leasure"}, // whaaaat
-	"length":    {"lenght", "lenth"},
-	"library":   {"libary", "librery"},
+	"length":    {"lenght"},
+	"library":   {"librery"},
 	"license":   {"licence"},
-	"lightning": {"lightening"},
-	"lose":      {"loose"},
-	"lying":     {"lieing"},
 
 	// M for my fingers hurt...
-	"maintenance": {"maintainance", "maintenence"}, // maintaining sanity
-	"maneuver":    {"maneouvre", "manuever"},
-	"marriage":    {"marrage", "marrige"}, // marriage is a commitment, just like this project
-	"mathematics": {"mathmatics", "mathematic"},
-	"medicine":    {"medicin", "medcine"}, // i need some for this headache
-	"millennium":  {"millenium", "millinium"},
-	"miniature":   {"minature", "miniuture"}, // this list is not miniature
-	"minute":      {"minuite", "minut"},
-	"mischievous": {"mischevious", "mischievious"},
-	"misspell":    {"mispell", "missppell"},
-	"morning":     {"moring"},
-	"muscle":      {"muscel", "muscule"},
-	"necessary":   {"neccessary", "neccesary"},
-	"neighbor":    {"neighbour"},
+	"maintenance": {"maintenence"}, // maintaining sanity
+	"maneuver":    {"manuever"},
+	"marriage":    {"marrige"}, // marriage is a commitment, just like this project
+	"mathematics": {"mathematic"},
+	"medicine":    {"medcine"}, // i need some for this headache
+	"millennium":  {"millinium"},
+	"miniature":   {"miniuture"}, // this list is not miniature
+	"minute":      {"minut"},
+	"mischievous": {"mischevious"},
+	"misspell":    {"missppell"},
+	"muscle":      {"muscel"},
+	"necessary":   {"neccesary"},
 
 	// N for no more comments now
-	"noticeable":  {"noticable", "noticeble"},
-	"nowadays":    {"nowdays", "now a days"},
-	"occasion":    {"occassion", "ocation"},
-	"occurred":    {"occured"},
-	"occurrence":  {"occurence", "occurance"},
-	"often":       {"ofen", "offten"},
+	"noticeable":  {"noticeble"},
+	"nowadays":    {"now a days"},
+	"occasion":    {"ocation"},
+	"occurrence":  {"occurance"},
+	"often":       {"offten"},
 	"omission":    {"ommision"},
-	"opportunity": {"oppurtunity", "oportunity"},
-	"original":    {"origional", "originall"},
+	"opportunity": {"oppurtunity"},
+	"original":    {"originall"},
 	"ought":       {"aught"},
-	"overrated":   {"overated"},
 
 	// P words
-	"parallel":      {"paralell", "paralel"},
-	"particularly":  {"particulary"},
-	"pastime":       {"passtime"},
-	"performance":   {"performence", "performanse"},
-	"perhaps":       {"perhapps", "perhapse"},
-	"personnel":     {"personel", "personnell"},
-	"piece":         {"peace"},
-	"playwright":    {"playwrite"},
-	"possession":    {"possesion"},
-	"possible":      {"possable", "possibile"},
-	"potatoes":      {"potatos", "potatose"},
-	"practice":      {"practise"},
-	"precede":       {"preceed", "procede"},
-	"preference":    {"preferance", "prefference"},
-	"prejudice":     {"predjudice", "prejuduce"},
-	"preparation":   {"preperation", "prepareation"},
-	"principal":     {"principle"},
-	"privilege":     {"privelege", "privelige"},
-	"probably":      {"probly", "probaly"},
-	"procedure":     {"proceedure", "proceddure"},
-	"proceed":       {"precede"},
-	"professor":     {"proffesor", "profesor"},
-	"promise":       {"promiss", "promice"},
-	"pronounce":     {"pronunce", "pronounciation"},
-	"pronunciation": {"pronounciation"},
-	"psychologist":  {"psycologist", "phycologist"},
-	"publicly":      {"publically", "publicaly"},
-	"purpose":       {"purpous"},
-	"quiet":         {"quite"},
+	"parallel":     {"paralell"},
+	"performance":  {"performence", "performanse"},
+	"perhaps":      {"perhapse"},
+	"personnel":    {"personnell"},
+	"piece":        {"peace"},
+	"possible":     {"possable"},
+	"potatoes":     {"potatose"},
+	"practice":     {"practise"},
+	"precede":      {"preceed", "procede"},
+	"preference":   {"preferance"},
+	"prejudice":    {"prejuduce"},
+	"preparation":  {"preperation"},
+	"principal":    {"principle"},
+	"privilege":    {"privelege", "privelige"},
+	"probably":     {"probaly"},
+	"procedure":    {"proceddure"},
+	"proceed":      {"precede"},
+	"professor":    {"proffesor"},
+	"promise":      {"promiss", "promice"},
+	"psychologist": {"phycologist"},
+	"publicly":     {"publicaly"},
+	"purpose":      {"purpous"},
+	"quiet":        {"quite"},
 
 	// R words
-	"really":     {"realy", "reallly"},
+	"really":     {"reallly"},
 	"receive":    {"recieve"},
-	"recommend":  {"recomend", "recommned"},
-	"reference":  {"referance", "refference"},
+	"recommend":  {"recommned"},
+	"reference":  {"referance"},
 	"relevant":   {"relevent", "relavent"},
-	"religious":  {"religous", "religius"},
-	"repetition": {"repitition", "repeatition"},
-	"restaurant": {"resturant", "restaraunt"},
-	"rhythm":     {"rythm", "rythem"},
-	"ridiculous": {"rediculous", "ridiculus"},
+	"religious":  {"religius"},
+	"repetition": {"repitition"},
+	"restaurant": {"restaraunt"},
+	"rhythm":     {"rythem"},
+	"ridiculous": {"rediculous"},
 
 	// S words
 	"sacrifice":  {"sacrafice", "sacrifise"},
-	"safety":     {"safty", "saftey"},
-	"schedule":   {"schedual", "scheduele"},
+	"safety":     {"saftey"},
+	"schedule":   {"schedual"},
 	"science":    {"sciense", "sceince"},
 	"secretary":  {"secratary", "secretery"},
 	"sentence":   {"sentance", "sentense"},
-	"separate":   {"seperate", "seperat"},
-	"sergeant":   {"sergent"},
-	"similar":    {"similiar", "similer"},
+	"separate":   {"seperate"},
+	"similar":    {"similer"},
 	"since":      {"sence"},
-	"sincerely":  {"sincerly"},
-	"skillful":   {"skillfull"},
 	"speech":     {"speach"},
-	"successful": {"succesful", "succesfull"},
+	"successful": {"succesfull"},
 	"supersede":  {"supercede", "superceed"},
-	"surprise":   {"surprize", "suprize"},
+	"surprise":   {"surprize"},
 
 	// T words
 	"than":      {"then"},
-	"their":     {"there", "they're"},
-	"therefore": {"therfore", "therefor"},
+	"their":     {"there"},
+	"therefore": {"therefor"},
 	"third":     {"thrid", "therd"},
-	"though":    {"tho"},
-	"through":   {"thru"},
-	"tired":     {"tird", "tierd"},
-	"together":  {"togather", "togeather"},
-	"tomorrow":  {"tommorrow", "tomorow"},
-	"tongue":    {"tounge", "toung"},
-	"toward":    {"towards"},
-	"truly":     {"truely", "trully"},
+	"tired":     {"tierd"},
+	"together":  {"togather"},
+	"tomorrow":  {"tomorow"},
+	"tongue":    {"tounge"},
+	"truly":     {"trully"},
 
 	// V words
 	"vacuum":    {"vacume"},
 	"variety":   {"variaty"},
-	"vegetable": {"vegtable", "vegeable"},
-	"vehicle":   {"vehicale"},
+	"vegetable": {"vegeable"},
 	"villain":   {"villian"},
 	"visible":   {"visable", "visibel"},
 
 	// W words
-	"wednesday": {"wendsday", "wedensday"},
+	"wednesday": {"wedensday"},
 	"weird":     {"wierd", "weard"},
 	"welcome":   {"wellcom"},
 	"which":     {"witch"},
 	"women":     {"wemen"},
 	"would've":  {"would of"},
-	"write":     {"rite"},
-	"writing":   {"writeing"},
-
-	// 🤓🤓🤓🤓
-	"your": {"you're"},
 }
