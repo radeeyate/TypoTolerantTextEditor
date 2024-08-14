@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"math/rand"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"math/rand"
+	"strings"
 )
-
-
 
 type entry1 struct {
 	widget.Entry
@@ -25,7 +23,6 @@ func newEntry1() *entry1 {
 }
 
 func (e *entry1) TypedKey(ke *fyne.KeyEvent) {
-	//fmt.Printf("entry1 ke: %v\n", ke)
 	e.Entry.TypedKey(ke)
 
 	if ke.Name == fyne.KeySpace {
@@ -68,6 +65,13 @@ func printCursorPosition(e *entry1) {
 
 func typoWord(word string) string {
 	newWord := ""
+
+	if val, ok := wordReplacements[word]; ok { // word map
+		newWord = val[rand.Intn(len(val))]
+
+		return newWord
+	}
+
 	for i := 0; i < len(word); i++ {
 		var chance float32
 		switch {
@@ -93,7 +97,7 @@ func typoWord(word string) string {
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Abc")
+	w := a.NewWindow("Typo Tolerant Text Editor")
 
 	editor1 := newEntry1()
 	editor1.SetPlaceHolder("Start typing here...")
