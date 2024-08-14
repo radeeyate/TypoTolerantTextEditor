@@ -7,26 +7,27 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"math/rand"
+	"os"
 	"strings"
 )
 
 var w fyne.Window
 
-type entry1 struct {
+type editor struct {
 	widget.Entry
 }
 
 var saved bool
 
-func newEntry1() *entry1 {
-	e := &entry1{}
+func newEditor() *editor {
+	e := &editor{}
 	e.ExtendBaseWidget(e)
 	e.Entry.MultiLine = true
 	e.Entry.Wrapping = fyne.TextWrapOff
 	return e
 }
 
-func (e *entry1) TypedKey(ke *fyne.KeyEvent) {
+func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 	e.Entry.TypedKey(ke)
 
 	if !strings.HasPrefix(w.Title(), "*") {
@@ -35,73 +36,78 @@ func (e *entry1) TypedKey(ke *fyne.KeyEvent) {
 	}
 
 	if ke.Name == fyne.KeySpace {
-		printCursorPosition(e)
+		modifyText(e)
 	}
 }
 
-func printCursorPosition(e *entry1) { // best code every
-	cursor := e.Entry.CursorColumn
-	row := e.Entry.CursorRow
-	text := e.Entry.Text
-	fmt.Println(row)
-	lines := strings.Split(text, "\n")
-	if len(lines) <= row {
-		fmt.Println("error: out of bounds ")
+func modifyText(e *editor) {
+	cursorColumn := e.Entry.CursorColumn
+	cursorRow := e.Entry.CursorRow
+	entryText := e.Entry.Text
+
+	lines := strings.Split(entryText, "\n")
+	if cursorRow >= len(lines) {
+		fmt.Println("Error: Row out of bounds")
 		return
 	}
-	lineText := lines[row]
-	part1, part2 := lineText[:cursor], lineText[cursor:]
-	fmt.Println("part 1: " + part1)
-	fmt.Println("part 2: " + part2)
-	fmt.Println(cursor, row, lineText)
-	modifyWord := strings.Split(part1, " ")
-	modifyWord = modifyWord[len(modifyWord)-1:]
 
-	part1 = strings.TrimSuffix(part1, modifyWord[0])
-	typoWord := typoWord(modifyWord[0])
-	part1 += typoWord
+	currentLine := lines[cursorRow]
+	textBeforeCursor, textAfterCursor := currentLine[:cursorColumn], currentLine[cursorColumn:]
 
-	newLines := strings.Split(text, "\n")
-	if len(part2) == 0 {
-		newLines[row] = part1
-	} else {
-		newLines[row] = part1 + " " + part2
+	// debugging prints
+	if len(os.Args) > 1 && os.Args[1] == "--debug" {
+		fmt.Println("Text before cursor: " + textBeforeCursor)
+		fmt.Println("Text after cursor: " + textAfterCursor)
+		fmt.Println(cursorColumn, cursorRow, currentLine)
 	}
-	newText := strings.Join(newLines, "\n")
 
-	e.Entry.SetText(newText)
+	words := strings.Split(textBeforeCursor, " ")
+	if len(words) == 0 {
+		return // no words to modify
+	}
+	lastWord := words[len(words)-1]
+
+	textBeforeCursor = strings.TrimSuffix(textBeforeCursor, lastWord)
+	correctedWord := introduceTypo(lastWord)
+	textBeforeCursor += correctedWord
+
+	if len(textAfterCursor) == 0 {
+		lines[cursorRow] = textBeforeCursor
+	} else {
+		lines[cursorRow] = textBeforeCursor + textAfterCursor
+	}
+
+	updatedText := strings.Join(lines, "\n")
+	e.Entry.SetText(updatedText)
 }
 
-func typoWord(word string) string {
-	newWord := ""
-
-	if val, ok := wordReplacements[word]; ok { // word map
-		newWord = val[rand.Intn(len(val))]
-
-		return newWord
+func introduceTypo(word string) string {
+	if replacements, ok := wordReplacements[word]; ok {
+		return replacements[rand.Intn(len(replacements))]
 	}
 
-	for i := 0; i < len(word); i++ {
-		var chance float32
-		switch {
-		case len(word) < 5:
-			chance = 0.3
-		case len(word) > 5:
-			chance = 0.15 // make longer words have less chance of a typo
+	var typoProbability float32
+	switch {
+	case len(word) < 5:
+		typoProbability = 0.3
+	case len(word) > 5:
+		typoProbability = 0.15
+	}
 
-		}
-		if rand.Float32() < chance {
-			if val, ok := keyboardMap[string(word[i])]; ok {
-				newWord += string(keyboardMap[string(word[i])][rand.Intn(len(val))])
+	result := ""
+	for i := 0; i < len(word); i++ {
+		if rand.Float32() < typoProbability {
+			if replacements, ok := keyboardMap[string(word[i])]; ok {
+				result += replacements[rand.Intn(len(replacements))]
 			} else {
-				newWord += string(word[i])
+				result += string(word[i])
 			}
 		} else {
-			newWord += string(word[i])
+			result += string(word[i])
 		}
 	}
 
-	return newWord
+	return result
 }
 
 func main() {
@@ -110,7 +116,7 @@ func main() {
 
 	saved = true
 
-	editor1 := newEntry1()
+	editor1 := newEditor()
 	editor1.SetPlaceHolder("Start typing here...")
 
 	content := container.NewStack(editor1)
