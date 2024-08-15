@@ -5,6 +5,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"math/rand"
 	"os"
@@ -16,6 +18,9 @@ var w fyne.Window
 type editor struct {
 	widget.Entry
 }
+
+var windowFile os.File
+var fileName string
 
 var saved bool
 
@@ -31,13 +36,38 @@ func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 	e.Entry.TypedKey(ke)
 
 	if !strings.HasPrefix(w.Title(), "*") {
-		w.SetTitle("*Typo Tolerant Text Editor")
+		w.SetTitle("*" + w.Title())
 		saved = false
 	}
 
 	if ke.Name == fyne.KeySpace {
 		modifyText(e)
 	}
+}
+
+func (e *editor) TypedShortcut(s fyne.Shortcut) {
+	if _, ok := s.(*desktop.CustomShortcut); !ok {
+		e.Entry.TypedShortcut(s)
+		return
+	}
+
+	if s.ShortcutName() == "CustomDesktop:Control+S" {
+		if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
+			dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version!", w).Show()
+		} else {
+			saver := dialog.NewFileSave(func(file fyne.URIWriteCloser, err error) {
+				if err != nil {
+					return
+				}
+				file.Write([]byte(e.Text))
+				fileName = file.URI().Name()
+				w.SetTitle("Typo Tolerant Text Editor - " + fileName)
+				saved = true
+			}, w)
+			saver.Show()
+		}
+	}
+
 }
 
 func modifyText(e *editor) {
@@ -116,17 +146,24 @@ func main() {
 
 	saved = true
 
-	editor1 := newEditor()
-	editor1.SetPlaceHolder("Start typing here...")
+	editor := newEditor()
+	editor.SetPlaceHolder("Start typing here...")
 
-	content := container.NewStack(editor1)
+	content := container.NewStack(editor)
 	w.SetContent(content)
+
+	w.SetMainMenu(makeMenu(a, w))
 
 	w.Resize(fyne.NewSize(800, 600))
 
-	w.Canvas().SetOnTypedKey(func(ke *fyne.KeyEvent) {
-		fmt.Printf("window canvas: %v\n", ke.Name)
-	})
-
 	w.ShowAndRun()
+}
+
+func makeMenu(a fyne.App, w fyne.Window) *fyne.MainMenu {
+	newItem := fyne.NewMenuItem("New", nil)
+	checkedItem := fyne.NewMenuItem("Checked", nil)
+	checkedItem.Checked = false
+	newItem.ChildMenu = fyne.NewMenu("File", checkedItem)
+
+	return fyne.NewMainMenu(newItem.ChildMenu)
 }
