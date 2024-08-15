@@ -9,6 +9,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
@@ -69,11 +70,8 @@ func (e *editor) TypedShortcut(s fyne.Shortcut) {
 }
 
 func sorryDialogContent(content string) fyne.CanvasObject {
-	label := widget.NewLabel("Sorry, you can't " + content + " files on web or mobile. Try downloading the desktop version on")
-	labelFinish := widget.NewLabel("!")
-	githubLink, _ := url.Parse("https://github.com/radeeyate/TypoTolerantTextEditor")
-	link := widget.NewHyperlink("GitHub", githubLink)
-	return container.NewHBox(label, link, labelFinish)
+	label := widget.NewRichTextFromMarkdown("Sorry, you can't " + content + " files on web or mobile. Try downloading the desktop version on [Github](https://github.com/radeeyate/TypoTolerantTextEditor)!")
+	return container.NewVBox(label)
 }
 
 func saveFile(e *editor) {
@@ -231,8 +229,27 @@ func introduceTypo(word string) string {
 func main() {
 	a := app.New()
 	w = a.NewWindow("Typo Tolerant Text Editor")
+	ab := a.NewWindow("About Typo Tolerant Text Editor")
+	ab.Resize(fyne.NewSize(500, 300))
 
 	saved = true
+
+	icon := canvas.NewImageFromFile("./Icon.png")
+	icon.Resize(fyne.NewSize(50, 50))
+	icon.FillMode = canvas.ImageFillOriginal
+
+	version := a.Metadata().Version
+	sourceLink, _ := url.Parse("https://github.com/radeeyate/TypoTolerantTextEditor")
+
+	aboutInfo := container.NewVBox(
+		icon,
+		container.NewVBox(
+			widget.NewLabelWithStyle("Typo Tolerant Text Editor\n" + version, fyne.TextAlignCenter, fyne.TextStyle{}),
+			widget.NewLabelWithStyle("The text editor with built-in typos.", fyne.TextAlignCenter, fyne.TextStyle{}),
+			widget.NewHyperlinkWithStyle("Source Code", sourceLink, fyne.TextAlignCenter, fyne.TextStyle{}),
+		),
+	)
+	ab.SetContent(aboutInfo)
 
 	editor := newEditor()
 	editor.SetPlaceHolder("Start typing here...")
@@ -262,14 +279,14 @@ func main() {
 	}, func(shortcut fyne.Shortcut) { openFileSaveCheck(editor) })
 
 	if !a.Driver().Device().IsBrowser() && !a.Driver().Device().IsMobile() {
-		w.SetMainMenu(makeMenu(editor))
+		w.SetMainMenu(makeMenu(editor, ab))
 	}
 
 	w.Resize(fyne.NewSize(800, 600))
 	w.ShowAndRun()
 }
 
-func makeMenu(e *editor) *fyne.MainMenu {
+func makeMenu(e *editor, ab fyne.Window) *fyne.MainMenu {
 	saveItem := fyne.NewMenuItem("Save (Ctrl+S)", func() {
 		saveFile(e)
 	})
@@ -278,5 +295,10 @@ func makeMenu(e *editor) *fyne.MainMenu {
 	})
 	fileMenu := fyne.NewMenu("File", saveItem, openItem)
 
-	return fyne.NewMainMenu(fileMenu)
+	aboutItem := fyne.NewMenuItem("About", func() {
+		ab.Show()
+	})
+	helpMenu := fyne.NewMenu("Help", aboutItem)
+
+	return fyne.NewMainMenu(fileMenu, helpMenu)
 }

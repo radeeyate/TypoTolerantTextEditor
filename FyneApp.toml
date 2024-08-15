@@ -2,5 +2,5 @@
   Icon = "Icon.png"
   Name = "TypoTolerantTextEditor"
   ID = "dev.radi8.ttte"
-  Version = "1.0.0"
-  Build = 23
+  Version = "1.1.0"
+  Build = 25
