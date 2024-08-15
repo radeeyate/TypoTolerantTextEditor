@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"net/url"
 	"os"
 	"strings"
 
@@ -16,15 +16,12 @@ import (
 )
 
 var w fyne.Window
+var filePath string
+var saved bool
 
 type editor struct {
 	widget.Entry
 }
-
-var windowFile os.File
-var filePath string
-
-var saved bool
 
 func newEditor() *editor {
 	e := &editor{}
@@ -37,9 +34,17 @@ func newEditor() *editor {
 func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 	e.Entry.TypedKey(ke)
 
+	fmt.Println(ke.Physical.ScanCode)
+
+	if _, ok := nonTextChangeKeys[ke.Physical.ScanCode]; ok {
+		return
+	}
+
 	if !strings.HasPrefix(w.Title(), "*") {
 		w.SetTitle("*" + w.Title())
+		fmt.Println(saved)
 		saved = false
+		fmt.Println(saved)
 	}
 
 	if filePath == "" && e.Entry.Text == "" {
@@ -63,9 +68,17 @@ func (e *editor) TypedShortcut(s fyne.Shortcut) {
 	}
 }
 
+func sorryDialogContent(content string) fyne.CanvasObject {
+	label := widget.NewLabel("Sorry, you can't " + content + " files on web or mobile. Try downloading the desktop version on")
+	labelFinish := widget.NewLabel("!")
+	githubLink, _ := url.Parse("https://github.com/radeeyate/TypoTolerantTextEditor")
+	link := widget.NewHyperlink("GitHub", githubLink)
+	return container.NewHBox(label, link, labelFinish)
+}
+
 func saveFile(e *editor) {
 	if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
-		dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version on GitHub!", w).Show()
+		dialog.NewCustom("Download for Desktop", "OK", sorryDialogContent("save"), w).Show()
 	} else {
 		if filePath == "" {
 			dialog.NewFileSave(func(file fyne.URIWriteCloser, err error) {
@@ -100,8 +113,9 @@ func saveFile(e *editor) {
 
 func openFileSaveCheck(e *editor) {
 	if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
-		dialog.NewInformation("Error", "Sorry, you can't open files on web or mobile. Try downloading the desktop version on GitHub!", w).Show()
+		dialog.NewCustom("Download for Desktop", "OK", sorryDialogContent("open"), w).Show()
 	} else {
+		fmt.Println(saved)
 		if !saved {
 			dialog.NewConfirm("Save", "You have unsaved changes. Are you sure you want to open a new file?", func(open bool) {
 				if open {
@@ -129,8 +143,8 @@ func openFile(e *editor) {
 			dialog.NewError(err, w).Show()
 			return
 		}
-		
-		content, err := ioutil.ReadFile(file.URI().Path())
+
+		content, err := os.ReadFile(file.URI().Path())
 		if err != nil {
 			dialog.NewError(err, w).Show()
 			return
@@ -236,7 +250,7 @@ func main() {
 			os.Exit(0)
 		}
 	})
-	
+
 	w.Canvas().AddShortcut(&desktop.CustomShortcut{
 		KeyName:  fyne.KeyS,
 		Modifier: fyne.KeyModifierControl,
@@ -248,14 +262,14 @@ func main() {
 	}, func(shortcut fyne.Shortcut) { openFileSaveCheck(editor) })
 
 	if !a.Driver().Device().IsBrowser() && !a.Driver().Device().IsMobile() {
-		w.SetMainMenu(makeMenu(a, w, editor))
+		w.SetMainMenu(makeMenu(editor))
 	}
 
 	w.Resize(fyne.NewSize(800, 600))
 	w.ShowAndRun()
 }
 
-func makeMenu(a fyne.App, w fyne.Window, e *editor) *fyne.MainMenu {
+func makeMenu(e *editor) *fyne.MainMenu {
 	saveItem := fyne.NewMenuItem("Save (Ctrl+S)", func() {
 		saveFile(e)
 	})
