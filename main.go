@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -51,20 +52,20 @@ func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 }
 
 func (e *editor) TypedShortcut(s fyne.Shortcut) {
-	if _, ok := s.(*desktop.CustomShortcut); !ok {
-		e.Entry.TypedShortcut(s)
-		return
+	if shortcut, ok := s.(*desktop.CustomShortcut); ok {
+		if shortcut.KeyName == fyne.KeyS && shortcut.Modifier == fyne.KeyModifierControl {
+			saveFile(e)
+			return
+		} else if shortcut.KeyName == fyne.KeyO && shortcut.Modifier == fyne.KeyModifierControl {
+			openFileSaveCheck(e)
+			return
+		}
 	}
-
-	if s.ShortcutName() == "CustomDesktop:Control+S" {
-		saveFile(e)
-	}
-
 }
 
 func saveFile(e *editor) {
 	if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
-		dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version!", w).Show()
+		dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version on GitHub!", w).Show()
 	} else {
 		if filePath == "" {
 			dialog.NewFileSave(func(file fyne.URIWriteCloser, err error) {
@@ -95,6 +96,52 @@ func saveFile(e *editor) {
 			w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
 		}
 	}
+}
+
+func openFileSaveCheck(e *editor) {
+	if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
+		dialog.NewInformation("Error", "Sorry, you can't open files on web or mobile. Try downloading the desktop version on GitHub!", w).Show()
+	} else {
+		if !saved {
+			dialog.NewConfirm("Save", "You have unsaved changes. Are you sure you want to open a new file?", func(open bool) {
+				if open {
+					openFile(e)
+				}
+			}, w).Show()
+		} else {
+			openFile(e)
+		}
+	}
+}
+
+func openFile(e *editor) {
+	dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
+		if err != nil {
+			dialog.NewError(err, w).Show()
+			return
+		}
+
+		if file == nil {
+			return
+		}
+
+		if _, err := os.Stat(file.URI().Path()); err != nil {
+			dialog.NewError(err, w).Show()
+			return
+		}
+		
+		content, err := ioutil.ReadFile(file.URI().Path())
+		if err != nil {
+			dialog.NewError(err, w).Show()
+			return
+		}
+
+		w.Canvas().Focus(e)
+		e.Entry.SetText(string(content))
+		saved = true
+		filePath = file.URI().Path()
+		w.SetTitle(strings.TrimPrefix(w.Title(), "*") + " - " + file.URI().Name())
+	}, w).Show()
 }
 
 func modifyText(e *editor) {
@@ -148,7 +195,7 @@ func introduceTypo(word string) string {
 	case len(word) < 5:
 		typoProbability = 0.3
 	case len(word) > 5:
-		typoProbability = 0.15
+		typoProbability = 0.2
 	}
 
 	result := ""
@@ -176,16 +223,35 @@ func main() {
 	editor := newEditor()
 	editor.SetPlaceHolder("Start typing here...")
 
-	content := container.NewStack(editor)
-	w.SetContent(content)
+	w.SetContent(container.NewStack(editor))
 
-	if a.Driver().Device().IsBrowser() || a.Driver().Device().IsMobile() {
-	} else {
+	w.SetCloseIntercept(func() {
+		if !saved {
+			dialog.NewConfirm("Exit", "Are you sure you want to exit? Any unsaved changes will be lost.", func(close bool) {
+				if close {
+					os.Exit(0)
+				}
+			}, w).Show()
+		} else {
+			os.Exit(0)
+		}
+	})
+	
+	w.Canvas().AddShortcut(&desktop.CustomShortcut{
+		KeyName:  fyne.KeyS,
+		Modifier: fyne.KeyModifierControl,
+	}, func(shortcut fyne.Shortcut) { saveFile(editor) })
+
+	w.Canvas().AddShortcut(&desktop.CustomShortcut{
+		KeyName:  fyne.KeyO,
+		Modifier: fyne.KeyModifierControl,
+	}, func(shortcut fyne.Shortcut) { openFileSaveCheck(editor) })
+
+	if !a.Driver().Device().IsBrowser() && !a.Driver().Device().IsMobile() {
 		w.SetMainMenu(makeMenu(a, w, editor))
 	}
 
 	w.Resize(fyne.NewSize(800, 600))
-
 	w.ShowAndRun()
 }
 
@@ -193,7 +259,10 @@ func makeMenu(a fyne.App, w fyne.Window, e *editor) *fyne.MainMenu {
 	saveItem := fyne.NewMenuItem("Save (Ctrl+S)", func() {
 		saveFile(e)
 	})
-	fileMenu := fyne.NewMenu("File", saveItem)
+	openItem := fyne.NewMenuItem("Open (Ctrl+O)", func() {
+		openFileSaveCheck(e)
+	})
+	fileMenu := fyne.NewMenu("File", saveItem, openItem)
 
 	return fyne.NewMainMenu(fileMenu)
 }
