@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"os"
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
-	"math/rand"
-	"os"
-	"strings"
 )
 
 var w fyne.Window
@@ -20,7 +21,7 @@ type editor struct {
 }
 
 var windowFile os.File
-var fileName string
+var filePath string
 
 var saved bool
 
@@ -40,6 +41,10 @@ func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 		saved = false
 	}
 
+	if filePath == "" && e.Entry.Text == "" {
+		w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
+	}
+
 	if ke.Name == fyne.KeySpace {
 		modifyText(e)
 	}
@@ -52,22 +57,44 @@ func (e *editor) TypedShortcut(s fyne.Shortcut) {
 	}
 
 	if s.ShortcutName() == "CustomDesktop:Control+S" {
-		if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
-			dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version!", w).Show()
-		} else {
-			saver := dialog.NewFileSave(func(file fyne.URIWriteCloser, err error) {
-				if err != nil {
-					return
-				}
-				file.Write([]byte(e.Text))
-				fileName = file.URI().Name()
-				w.SetTitle("Typo Tolerant Text Editor - " + fileName)
-				saved = true
-			}, w)
-			saver.Show()
-		}
+		saveFile(e)
 	}
 
+}
+
+func saveFile(e *editor) {
+	if app.New().Driver().Device().IsBrowser() || app.New().Driver().Device().IsMobile() {
+		dialog.NewInformation("Error", "Sorry, you can't save files on web or mobile. Try downloading the desktop version!", w).Show()
+	} else {
+		if filePath == "" {
+			dialog.NewFileSave(func(file fyne.URIWriteCloser, err error) {
+
+				if err != nil {
+					dialog.NewError(err, w).Show()
+					return
+				}
+
+				if file == nil {
+					return
+				}
+
+				defer file.Close()
+				file.Write([]byte(e.Text))
+				filePath = file.URI().Path()
+				w.SetTitle("Typo Tolerant Text Editor - " + file.URI().Name())
+				saved = true
+			}, w).Show()
+
+		} else {
+			err := os.WriteFile(filePath, []byte(e.Text), 0644)
+			if err != nil {
+				dialog.NewError(err, w).Show()
+				return
+			}
+
+			w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
+		}
+	}
 }
 
 func modifyText(e *editor) {
@@ -152,18 +179,21 @@ func main() {
 	content := container.NewStack(editor)
 	w.SetContent(content)
 
-	w.SetMainMenu(makeMenu(a, w))
+	if a.Driver().Device().IsBrowser() || a.Driver().Device().IsMobile() {
+	} else {
+		w.SetMainMenu(makeMenu(a, w, editor))
+	}
 
 	w.Resize(fyne.NewSize(800, 600))
 
 	w.ShowAndRun()
 }
 
-func makeMenu(a fyne.App, w fyne.Window) *fyne.MainMenu {
-	newItem := fyne.NewMenuItem("New", nil)
-	checkedItem := fyne.NewMenuItem("Checked", nil)
-	checkedItem.Checked = false
-	newItem.ChildMenu = fyne.NewMenu("File", checkedItem)
+func makeMenu(a fyne.App, w fyne.Window, e *editor) *fyne.MainMenu {
+	saveItem := fyne.NewMenuItem("Save (Ctrl+S)", func() {
+		saveFile(e)
+	})
+	fileMenu := fyne.NewMenu("File", saveItem)
 
-	return fyne.NewMainMenu(newItem.ChildMenu)
+	return fyne.NewMainMenu(fileMenu)
 }
