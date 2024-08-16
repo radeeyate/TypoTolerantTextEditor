@@ -93,8 +93,10 @@ func modifyText(e *editor) {
 			if unicode.IsUpper(rune(typedCharacter[0])) {
 				characterToAdd = strings.ToUpper(characterToAdd)
 			}
-			
-			e.Entry.SetText(textBeforeCursor[:len(textBeforeCursor)-1] + characterToAdd + textAfterCursor)
+
+			textLines[cursorRow] = textBeforeCursor[:len(textBeforeCursor)-1] + characterToAdd + textAfterCursor
+
+			e.Entry.SetText(strings.Join(textLines, "\n"))
 			if currentProbability < 0.35 {
 				currentProbability += (0.05 + rand.Float32()*(0.1-0.05))
 
