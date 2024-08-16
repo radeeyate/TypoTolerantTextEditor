@@ -182,7 +182,7 @@ func modifyText(e *editor) {
 	textBeforeCursor, textAfterCursor := currentLine[:cursorColumn], currentLine[cursorColumn:]
 
 	// debugging prints
-	if len(os.Args) > 1 && os.Args[1] == "--debug" {
+	if debug {
 		fmt.Println("Text before cursor: " + textBeforeCursor)
 		fmt.Println("Text after cursor: " + textAfterCursor)
 		fmt.Println(cursorColumn, cursorRow, currentLine)
@@ -247,7 +247,9 @@ func introduceTypo(word string) string {
 		wordRune[0], wordRune[1] = wordRune[1], wordRune[0]
 		result = string(wordRune)
 
-		fmt.Println(result)
+		if debug {
+			fmt.Println(result)
+		}
 		return result
 	}
 
@@ -262,7 +264,9 @@ func introduceTypo(word string) string {
 			if replacements, ok := keyboardMap[strings.ToLower(changeCharacter)]; ok {
 				characterToAdd := replacements[rand.Intn(len(replacements))]
 
-				fmt.Println(changeCharacter)
+				if debug {
+					fmt.Println(changeCharacter)
+				}
 
 				if unicode.IsUpper(rune(changeCharacter[0])) {
 					characterToAdd = strings.ToUpper(characterToAdd)
@@ -338,10 +342,15 @@ func main() {
 
 	if flag.NArg() > 0 {
 		filePath = flag.Arg(0)
-		fmt.Println(filePath)
+
+		if debug {
+			fmt.Println(filePath)
+		}
 
 		if _, err := os.Stat(filePath); !errors.Is(err, os.ErrNotExist) {
-			fmt.Println("exists!")
+			if debug {
+				fmt.Println("exists!")
+			}
 			content, err := os.ReadFile(filePath)
 
 			if err != nil {
