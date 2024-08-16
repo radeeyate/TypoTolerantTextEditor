@@ -24,6 +24,7 @@ var w fyne.Window
 var filePath string
 var saved bool
 var debug bool
+var currentProbability float32
 
 type editor struct {
 	widget.Entry
@@ -37,27 +38,34 @@ func newEditor() *editor {
 	return e
 }
 
-func (e *editor) TypedKey(ke *fyne.KeyEvent) {
-	e.Entry.TypedKey(ke)
-
-	//fmt.Println(ke.Physical.ScanCode)
+func (e *editor) KeyUp(ke *fyne.KeyEvent) {
+	e.Entry.KeyUp(ke)
 
 	if _, ok := nonTextChangeKeys[ke.Physical.ScanCode]; ok {
 		return
-	}
+	} else {
+		if !strings.HasPrefix(w.Title(), "*") {
+			w.SetTitle("*" + w.Title())
+			saved = false
+		}
+	
+		if filePath == "" && e.Entry.Text == "" {
+			w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
+		}
 
-	if !strings.HasPrefix(w.Title(), "*") {
-		w.SetTitle("*" + w.Title())
-		saved = false
-	}
-
-	if filePath == "" && e.Entry.Text == "" {
-		w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
-	}
-
-	if ke.Name == fyne.KeySpace {
 		modifyText(e)
 	}
+}
+
+func modifyText(e *editor) {
+	cursorColumn := e.Entry.CursorColumn
+	cursorRow := e.Entry.CursorRow
+	entryText := e.Entry.Text
+	textLines := strings.Split(entryText, "\n")
+	currentLine := textLines[cursorRow]
+	textBeforeCursor, textAfterCursor := currentLine[:cursorColumn], currentLine[cursorColumn:]
+
+	fmt.Println(textBeforeCursor, textAfterCursor)
 }
 
 func (e *editor) TypedShortcut(s fyne.Shortcut) {
@@ -167,7 +175,7 @@ func openFile(e *editor) {
 	}, w).Show()
 }
 
-func modifyText(e *editor) {
+func modifyTextOld(e *editor) {
 	cursorColumn := e.Entry.CursorColumn
 	cursorRow := e.Entry.CursorRow
 	entryText := e.Entry.Text
