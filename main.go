@@ -11,6 +11,8 @@ import (
 	"strings"
 	"unicode"
 
+	//	"unicode"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -48,9 +50,17 @@ func (e *editor) KeyUp(ke *fyne.KeyEvent) {
 			w.SetTitle("*" + w.Title())
 			saved = false
 		}
-	
+
 		if filePath == "" && e.Entry.Text == "" {
 			w.SetTitle(strings.TrimPrefix(w.Title(), "*"))
+		}
+
+		if ke.Name == fyne.KeySpace {
+			currentProbability = 0.15
+		}
+
+		if _, ok := keyboardMap[strings.ToLower(string(ke.Name))]; !ok { // character is not in replacement map
+			return
 		}
 
 		modifyText(e)
@@ -62,10 +72,38 @@ func modifyText(e *editor) {
 	cursorRow := e.Entry.CursorRow
 	entryText := e.Entry.Text
 	textLines := strings.Split(entryText, "\n")
+
+	if e.Entry.Text == "" {
+		return
+	}
+
+	if cursorRow >= len(textLines) {
+		fmt.Println("Error: Row out of bounds")
+		return
+	}
+
 	currentLine := textLines[cursorRow]
 	textBeforeCursor, textAfterCursor := currentLine[:cursorColumn], currentLine[cursorColumn:]
+	typedCharacter := currentLine[len(textBeforeCursor)-1:]
 
-	fmt.Println(textBeforeCursor, textAfterCursor)
+	if rand.Float32() < currentProbability {
+		if replacements, ok := keyboardMap[strings.ToLower(typedCharacter)]; ok {
+			characterToAdd := replacements[rand.Intn(len(replacements))]
+
+			if unicode.IsUpper(rune(typedCharacter[0])) {
+				characterToAdd = strings.ToUpper(characterToAdd)
+			}
+			
+			e.Entry.SetText(textBeforeCursor[:len(textBeforeCursor)-1] + characterToAdd + textAfterCursor)
+			if currentProbability < 0.35 {
+				currentProbability += (0.05 + rand.Float32()*(0.1-0.05))
+
+				if debug {
+					fmt.Println(currentProbability)
+				}
+			}
+		}
+	}
 }
 
 func (e *editor) TypedShortcut(s fyne.Shortcut) {
@@ -175,124 +213,6 @@ func openFile(e *editor) {
 	}, w).Show()
 }
 
-func modifyTextOld(e *editor) {
-	cursorColumn := e.Entry.CursorColumn
-	cursorRow := e.Entry.CursorRow
-	entryText := e.Entry.Text
-
-	lines := strings.Split(entryText, "\n")
-	if cursorRow >= len(lines) {
-		fmt.Println("Error: Row out of bounds")
-		return
-	}
-
-	currentLine := lines[cursorRow]
-	textBeforeCursor, textAfterCursor := currentLine[:cursorColumn], currentLine[cursorColumn:]
-
-	// debugging prints
-	if debug {
-		fmt.Println("Text before cursor: " + textBeforeCursor)
-		fmt.Println("Text after cursor: " + textAfterCursor)
-		fmt.Println(cursorColumn, cursorRow, currentLine)
-	}
-
-	words := strings.Split(textBeforeCursor, " ")
-	if len(words) == 0 {
-		return // no words to modify
-	}
-	lastWord := words[len(words)-1]
-
-	textBeforeCursor = strings.TrimSuffix(textBeforeCursor, lastWord)
-	correctedWord := introduceTypo(lastWord)
-	textBeforeCursor += correctedWord
-
-	if len(textAfterCursor) == 0 {
-		lines[cursorRow] = textBeforeCursor
-	} else {
-		lines[cursorRow] = textBeforeCursor + textAfterCursor
-	}
-
-	updatedText := strings.Join(lines, "\n")
-	e.Entry.SetText(updatedText)
-}
-
-func introduceTypo(word string) string {
-	if replacements, ok := wordReplacements[word]; ok {
-		result := ""
-		replacementWord := replacements[rand.Intn(len(replacements))]
-		for i := 0; i < len(word); i++ {
-			if unicode.IsUpper(rune(word[i])) {
-				result += strings.ToUpper(string(replacementWord[i]))
-			} else {
-				result += string(replacementWord[i])
-			}
-		}
-
-		return result
-	}
-
-	var typoProbability float32
-	var changeLimit int
-	switch {
-	case len(word) < 5:
-		typoProbability = 0.3
-		changeLimit = 3
-	case len(word) >= 5:
-		typoProbability = 0.2
-		changeLimit = 4
-	case len(word) >= 7:
-		typoProbability = 0.15
-		changeLimit = 5
-	case len(word) >= 10:
-		typoProbability = 0.05
-		changeLimit = 6
-	}
-
-	result := ""
-
-	if rand.Float32() < 0.1 && len(word) >= 4 { // 10% chance to flip characters
-		wordRune := []rune(word)
-		wordRune[0], wordRune[1] = wordRune[1], wordRune[0]
-		result = string(wordRune)
-
-		if debug {
-			fmt.Println(result)
-		}
-		return result
-	}
-
-	for i := 0; i < len(word); i++ {
-		if rand.Float32() < typoProbability {
-			changeCharacter := string(word[i])
-
-			if changeLimit == 0 {
-				result += string(word[i])
-			}
-
-			if replacements, ok := keyboardMap[strings.ToLower(changeCharacter)]; ok {
-				characterToAdd := replacements[rand.Intn(len(replacements))]
-
-				if debug {
-					fmt.Println(changeCharacter)
-				}
-
-				if unicode.IsUpper(rune(changeCharacter[0])) {
-					characterToAdd = strings.ToUpper(characterToAdd)
-				}
-
-				result += characterToAdd
-				changeLimit--
-			} else {
-				result += string(word[i])
-			}
-		} else {
-			result += string(word[i])
-		}
-	}
-
-	return result
-}
-
 func main() {
 	a := app.New()
 	w = a.NewWindow("Typo Tolerant Text Editor")
@@ -300,6 +220,7 @@ func main() {
 	ab.Resize(fyne.NewSize(500, 300))
 
 	saved = true
+	currentProbability = 0.15
 
 	icon := canvas.NewImageFromResource(a.Metadata().Icon)
 	icon.Resize(fyne.NewSize(50, 50))
@@ -345,7 +266,7 @@ func main() {
 		Modifier: fyne.KeyModifierControl,
 	}, func(shortcut fyne.Shortcut) { openFileSaveCheck(editor) })
 
-	debug = *flag.Bool("debug", false, "Enable debug mode")
+	flag.BoolVar(&debug, "debug", false, "enable debug mode")
 	flag.Parse()
 
 	if flag.NArg() > 0 {
