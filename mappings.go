@@ -55,7 +55,7 @@ var keyboardMap = map[string][]string{ // this was a pain to make
 	",":  {"m", ".", "/"},
 	".":  {",", "/", ";"},
 	"/":  {".", ",", "'", "'"},
-	" ":  {" "}, // this will never be used because it cannot be replaced :)
+	"Space":  {" "}, // this will never be used because it cannot be replaced :)
 }
 
 var wordReplacements = map[string][]string{
