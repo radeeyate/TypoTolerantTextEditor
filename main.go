@@ -1,11 +1,15 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"math/rand"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
+	"unicode"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -19,6 +23,7 @@ import (
 var w fyne.Window
 var filePath string
 var saved bool
+var debug bool
 
 type editor struct {
 	widget.Entry
@@ -35,7 +40,7 @@ func newEditor() *editor {
 func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 	e.Entry.TypedKey(ke)
 
-	fmt.Println(ke.Physical.ScanCode)
+	//fmt.Println(ke.Physical.ScanCode)
 
 	if _, ok := nonTextChangeKeys[ke.Physical.ScanCode]; ok {
 		return
@@ -43,9 +48,7 @@ func (e *editor) TypedKey(ke *fyne.KeyEvent) {
 
 	if !strings.HasPrefix(w.Title(), "*") {
 		w.SetTitle("*" + w.Title())
-		fmt.Println(saved)
 		saved = false
-		fmt.Println(saved)
 	}
 
 	if filePath == "" && e.Entry.Text == "" {
@@ -70,7 +73,14 @@ func (e *editor) TypedShortcut(s fyne.Shortcut) {
 }
 
 func sorryDialogContent(content string) fyne.CanvasObject {
-	label := widget.NewRichTextFromMarkdown("Sorry, you can't " + content + " files on web or mobile. Try downloading the desktop version on [Github](https://github.com/radeeyate/TypoTolerantTextEditor)!")
+	var label *widget.RichText
+
+	if content == "filenotfound" {
+		label = widget.NewRichTextFromMarkdown("The requested file \"" + filepath.Base(filePath) + "\" wasn't found. Make sure you didn't make a typo.")
+	} else {
+		label = widget.NewRichTextFromMarkdown("Sorry, you can't " + content + " files on web or mobile. Try downloading the desktop version on [Github](https://github.com/radeeyate/TypoTolerantTextEditor)!")
+	}
+
 	return container.NewVBox(label)
 }
 
@@ -93,6 +103,7 @@ func saveFile(e *editor) {
 				defer file.Close()
 				file.Write([]byte(e.Text))
 				filePath = file.URI().Path()
+
 				w.SetTitle("Typo Tolerant Text Editor - " + file.URI().Name())
 				saved = true
 			}, w).Show()
@@ -152,7 +163,7 @@ func openFile(e *editor) {
 		e.Entry.SetText(string(content))
 		saved = true
 		filePath = file.URI().Path()
-		w.SetTitle(strings.TrimPrefix(w.Title(), "*") + " - " + file.URI().Name())
+		w.SetTitle("Typo Tolerant Text Editor - " + file.URI().Name())
 	}, w).Show()
 }
 
@@ -199,22 +210,66 @@ func modifyText(e *editor) {
 
 func introduceTypo(word string) string {
 	if replacements, ok := wordReplacements[word]; ok {
-		return replacements[rand.Intn(len(replacements))]
+		result := ""
+		replacementWord := replacements[rand.Intn(len(replacements))]
+		for i := 0; i < len(word); i++ {
+			if unicode.IsUpper(rune(word[i])) {
+				result += strings.ToUpper(string(replacementWord[i]))
+			} else {
+				result += string(replacementWord[i])
+			}
+		}
+
+		return result
 	}
 
 	var typoProbability float32
+	var changeLimit int
 	switch {
 	case len(word) < 5:
 		typoProbability = 0.3
-	case len(word) > 5:
+		changeLimit = 3
+	case len(word) >= 5:
 		typoProbability = 0.2
+		changeLimit = 4
+	case len(word) >= 7:
+		typoProbability = 0.15
+		changeLimit = 5
+	case len(word) >= 10:
+		typoProbability = 0.05
+		changeLimit = 6
 	}
 
 	result := ""
+
+	if rand.Float32() < 0.1 && len(word) >= 4 { // 10% chance to flip characters
+		wordRune := []rune(word)
+		wordRune[0], wordRune[1] = wordRune[1], wordRune[0]
+		result = string(wordRune)
+
+		fmt.Println(result)
+		return result
+	}
+
 	for i := 0; i < len(word); i++ {
 		if rand.Float32() < typoProbability {
-			if replacements, ok := keyboardMap[string(word[i])]; ok {
-				result += replacements[rand.Intn(len(replacements))]
+			changeCharacter := string(word[i])
+
+			if changeLimit == 0 {
+				result += string(word[i])
+			}
+
+			if replacements, ok := keyboardMap[strings.ToLower(changeCharacter)]; ok {
+				characterToAdd := replacements[rand.Intn(len(replacements))]
+
+				fmt.Println(changeCharacter)
+
+				if unicode.IsUpper(rune(changeCharacter[0])) {
+					characterToAdd = strings.ToUpper(characterToAdd)
+				}
+
+				result += characterToAdd
+				changeLimit--
 			} else {
 				result += string(word[i])
 			}
@@ -234,7 +289,7 @@ func main() {
 
 	saved = true
 
-	icon := canvas.NewImageFromFile("./Icon.png")
+	icon := canvas.NewImageFromResource(a.Metadata().Icon)
 	icon.Resize(fyne.NewSize(50, 50))
 	icon.FillMode = canvas.ImageFillOriginal
 
@@ -244,7 +299,7 @@ func main() {
 	aboutInfo := container.NewVBox(
 		icon,
 		container.NewVBox(
-			widget.NewLabelWithStyle("Typo Tolerant Text Editor\n" + version, fyne.TextAlignCenter, fyne.TextStyle{}),
+			widget.NewLabelWithStyle("Typo Tolerant Text Editor\n"+version, fyne.TextAlignCenter, fyne.TextStyle{}),
 			widget.NewLabelWithStyle("The text editor with built-in typos.", fyne.TextAlignCenter, fyne.TextStyle{}),
 			widget.NewHyperlinkWithStyle("Source Code", sourceLink, fyne.TextAlignCenter, fyne.TextStyle{}),
 		),
@@ -277,6 +332,28 @@ func main() {
 		KeyName:  fyne.KeyO,
 		Modifier: fyne.KeyModifierControl,
 	}, func(shortcut fyne.Shortcut) { openFileSaveCheck(editor) })
+
+	debug = *flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	if flag.NArg() > 0 {
+		filePath = flag.Arg(0)
+		fmt.Println(filePath)
+
+		if _, err := os.Stat(filePath); !errors.Is(err, os.ErrNotExist) {
+			fmt.Println("exists!")
+			content, err := os.ReadFile(filePath)
+
+			if err != nil {
+				dialog.NewError(err, w).Show()
+			} else {
+				editor.Entry.SetText(string(content))
+				w.SetTitle("Typo Tolerant Text Editor - " + filepath.Base(filePath))
+			}
+		} else {
+			dialog.NewCustom("Error", "OK", sorryDialogContent("filenotfound"), w).Show()
+		}
+	}
 
 	if !a.Driver().Device().IsBrowser() && !a.Driver().Device().IsMobile() {
 		w.SetMainMenu(makeMenu(editor, ab))
